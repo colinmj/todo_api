@@ -6,6 +6,7 @@ const { ObjectId } = require('mongodb');
 const { mongoose } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
 const { User } = require('./models/user');
+const { authenticate } = require('./middleware/authenticate');
 
 const port = process.env.PORT || 3000;
 
@@ -109,6 +110,11 @@ app.patch('/todos/:id', (req, res) => {
 });
 
 //users
+
+app.get('/users/me', authenticate, (req, res) => {
+  res.send(req.user);
+});
+
 app.post('/users', (req, res) => {
   var body = _.pick(req.body, ['email', 'password']);
   var user = new User(body);

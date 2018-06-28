@@ -3,6 +3,8 @@ const bodyParser = require('body-parser');
 const _ = require('lodash');
 const { ObjectId } = require('mongodb');
 
+// ./mongod --dbpath ~/mongo-data
+
 const { mongoose } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
 const { User } = require('./models/user');
@@ -130,6 +132,30 @@ app.post('/users', (req, res) => {
       console.log(err);
       res.status(400).send(err);
     });
+});
+
+app.post('/users/login', (req, res) => {
+  var body = _.pick(req.body, ['email', 'password']);
+  User.findByCredentials(body.email, body.password)
+    .then(user => {
+      user.generateAuthToken().then(token => {
+        res.header('x-auth', token).send(user);
+      });
+    })
+    .catch(err => {
+      res.status(400).send();
+    });
+});
+
+app.delete('/users/me/token', authenticate, (req, res) => {
+  req.user.removeToken(req.token).then(
+    () => {
+      res.status(200).send();
+    },
+    () => {
+      res.status(400).send();
+    }
+  );
 });
 
 app.listen(port, () => {
